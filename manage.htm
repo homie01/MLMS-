@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Medicine Stock Management</title>
+    <style>
+      body {
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        background-color: #cae4ff;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        min-height: 100vh;
+        margin: 0;
+      }
+      .container {
+        background-color: #ffffff;
+        padding: 40px 50px;
+        border-radius: 16px;
+        box-shadow: 0 8px 20px rgba(0, 0, 0, 0.08);
+        width: 400px;
+      }
+      h1 {
+        text-align: center;
+        color: #1d3557;
+        margin-bottom: 30px;
+        font-size: 24px;
+      }
+      .section {
+        margin-bottom: 20px;
+      }
+      label {
+        display: block;
+        margin-bottom: 6px;
+        font-weight: 600;
+        color: #333;
+        font-size: 14px;
+      }
+      input,
+      select {
+        width: 94%;
+        padding: 12px;
+        border: 1px solid #ced4da;
+        border-radius: 8px;
+        font-size: 14px;
+        background-color: #f8f9fa;
+        transition: border-color 0.3s, box-shadow 0.3s;
+      }
+      input:focus,
+      select:focus {
+        border-color: #4dabf7;
+        box-shadow: 0 0 0 3px rgba(77, 171, 247, 0.25);
+        outline: none;
+      }
+      button {
+        width: 100%;
+        padding: 12px;
+        background-color: #4dabf7;
+        color: #fff;
+        border: none;
+        border-radius: 8px;
+        font-size: 16px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: background-color 0.3s;
+      }
+      button:hover {
+        background-color: #339af0;
+      }
+      #output {
+        margin-top: 20px;
+        color: #38b000;
+        text-align: center;
+        font-weight: 600;
+        font-size: 14px;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <h1>Manage Medicine Stock</h1>
+
+      <div class="section">
+        <label for="medicineSelect">Medicine</label>
+        <select id="medicineSelect">
+          <option value="">-- Select Medicine --</option>
+        </select>
+      </div>
+
+      <div class="section">
+        <label for="quantityInput">Update Quantity</label>
+        <input type="number" id="quantityInput" min="0" placeholder="Enter new quantity" />
+      </div>
+
+      <div class="section">
+        <label for="actionSelect">Action</label>
+        <select id="actionSelect">
+          <option value="add">Add Stock</option>
+          <option value="remove">Remove Stock</option>
+          <option value="set">Set Stock Level</option>
+        </select>
+      </div>
+
+      <div class="section">
+        <label for="noteInput">Note (Optional)</label>
+        <input type="text" id="noteInput" placeholder="Enter note about this update" />
+      </div>
+
+      <button onclick="updateStock()">Update Stock</button>
+      <button onclick="window.location.href='index.htm'" style="background-color: #6c757d; margin-top: 10px;">Back to Dashboard</button>
+
+      <div id="output"></div>
+    </div>
+
+    <script>
+      // Load medicine data when page loads
+      window.onload = function() {
+        loadMedicineData();
+      };
+
+      function loadMedicineData() {
+        const medicineStock = JSON.parse(localStorage.getItem('medicineStock')) || [];
+        const select = document.getElementById('medicineSelect');
+        
+        // Clear existing options
+        select.innerHTML = '<option value="">-- Select Medicine --</option>';
+        
+        // Add medicines to dropdown
+        medicineStock.forEach(med => {
+          const option = document.createElement('option');
+          option.value = med.name;
+          option.textContent = `${med.name} (Current Stock: ${med.quantity})`;
+          select.appendChild(option);
+        });
+
+        // If there's a selected medicine from the main page, select it
+        const selectedMedicine = localStorage.getItem('selectedMedicine');
+        if (selectedMedicine) {
+          const medicine = JSON.parse(selectedMedicine);
+          select.value = medicine.name;
+          document.getElementById('quantityInput').value = medicine.quantity;
+          // Clear the selection from storage
+          localStorage.removeItem('selectedMedicine');
+        }
+      }
+
+      function updateStock() {
+        const medicineName = document.getElementById('medicineSelect').value;
+        const quantity = parseInt(document.getElementById('quantityInput').value);
+        const action = document.getElementById('actionSelect').value;
+        const note = document.getElementById('noteInput').value;
+
+        if (!medicineName || isNaN(quantity) || quantity < 0) {
+          alert('Please select a medicine and enter a valid quantity.');
+          return;
+        }
+
+        // Get current stock
+        let medicineStock = JSON.parse(localStorage.getItem('medicineStock')) || [];
+        const medicineIndex = medicineStock.findIndex(med => med.name === medicineName);
+        
+        if (medicineIndex === -1) {
+          alert('Medicine not found in stock!');
+          return;
+        }
+
+        // Update quantity based on action
+        const currentQuantity = medicineStock[medicineIndex].quantity;
+        let newQuantity;
+
+        switch(action) {
+          case 'add':
+            newQuantity = currentQuantity + quantity;
+            break;
+          case 'remove':
+            newQuantity = Math.max(0, currentQuantity - quantity);
+            break;
+          case 'set':
+            newQuantity = quantity;
+            break;
+        }
+
+        // Update status based on quantity
+        let status;
+        if (newQuantity === 0) {
+          status = 'Out of Stock';
+        } else if (newQuantity <= 20) {
+          status = 'Low Stock';
+        } else {
+          status = 'In Stock';
+        }
+
+        // Update medicine stock
+        medicineStock[medicineIndex] = {
+          ...medicineStock[medicineIndex],
+          quantity: newQuantity,
+          status: status,
+          lastUpdated: new Date().toISOString(),
+          lastNote: note || 'Stock updated'
+        };
+
+        // Save to localStorage
+        localStorage.setItem('medicineStock', JSON.stringify(medicineStock));
+        localStorage.setItem('lastUpdated', new Date().toISOString());
+
+        // Show success message
+        document.getElementById('output').innerHTML = `
+          <div style="margin-top: 20px; padding: 10px; background-color: #d1fae5; color: #065f46; border-radius: 4px;">
+            ✅ Stock updated successfully!<br>
+            ${medicineName}: ${currentQuantity} → ${newQuantity} units
+          </div>
+        `;
+
+        // Reload medicine data to update the dropdown
+        loadMedicineData();
+      }
+    </script>
+  </body>
+</html>

@@ -1,0 +1,1170 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>MLMS | Medical Ledger Management System</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome CDN -->
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"
+    />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      body {
+        font-family: 'Poppins', sans-serif;
+      }
+
+      h1,
+      h2,
+      h3 {
+        font-family: 'Poppins', sans-serif;
+        font-weight: 700;
+        color: #2563eb;
+      }
+
+      p {
+        color: #374151;
+      }
+
+      .no-box-shadow {
+        box-shadow: none;
+        /* Remove shadow */
+        background-color: transparent;
+        /* Make background transparent */
+      }
+    </style>
+  </head>
+
+  <body class="bg-gradient-to-r from-blue-100 to-blue-50 min-h-screen flex">
+    <!-- Sidebar -->
+    <aside class="w-64 bg-white shadow-lg flex flex-col p-6" id="sidebar">
+      <div class="mb-8 flex items-center space-x-2">
+        <i class="fas fa-notes-medical text-blue-600 text-2xl"></i>
+        <span class="text-xl font-bold text-blue-700">MLMS</span>
+      </div>
+
+      <!-- User Info -->
+      <div id="user-info" class="mb-6 text-gray-700 font-semibold"></div>
+
+      <nav class="flex flex-col space-y-4" id="nav-buttons">
+        <button
+          onclick="navigate('home')"
+          class="flex items-center space-x-2 text-left hover:text-blue-600"
+        >
+          <i class="fas fa-home"></i><span>Home</span>
+        </button>
+        <button
+          onclick="navigate('login')"
+          class="flex items-center space-x-2 text-left hover:text-blue-600"
+          id="login-btn"
+        >
+          <i class="fas fa-sign-in-alt"></i><span>Login</span>
+        </button>
+        <button
+          onclick="navigate('register')"
+          class="flex items-center space-x-2 text-left hover:text-blue-600"
+          id="register-btn"
+        >
+          <i class="fas fa-user-plus"></i><span>Register</span>
+        </button>
+        <button
+          onclick="navigate('subscription')"
+          class="flex items-center space-x-2 text-left hover:text-blue-600"
+        >
+          <i class="fas fa-crown"></i><span>Subscription Plans</span>
+        </button>
+        <button
+          onclick="changeBackground()"
+          class="flex items-center space-x-2 text-left hover:text-green-600"
+        >
+          <i class="fas fa-plus-circle"></i><span>Get More</span>
+        </button>
+        <button
+          onclick="logoutUser()"
+          class="flex items-center space-x-2 text-left hover:text-red-600 hidden text-red-600 font-bold"
+          id="logout-btn"
+        >
+          <i class="fas fa-sign-out-alt"></i><span>Logout</span>
+        </button>
+      </nav>
+
+      <div class="mt-auto text-xs text-gray-400 pt-8">&copy; 2025 MLMS</div>
+    </aside>
+
+    <!-- Main Content -->
+    <main id="content" class="flex-1 p-10 overflow-auto"></main>
+
+    <script>
+      // Medicine Stock Section as a variable
+      const medicineStockSection = `
+            <section class="max-w-7xl mx-auto mt-12 p-8 bg-white rounded-xl shadow-lg">
+        <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-8">
+            <div>
+                <h2 class="text-3xl font-extrabold text-blue-800 mb-2 flex items-center">
+                    <i class="fas fa-pills mr-3 text-blue-500"></i>
+                    Available Medicine Stock
+                </h2>
+                <p class="text-gray-600">Last Updated: <span class="font-medium" id="last-updated">Loading...</span></p>
+            </div>
+            <button onclick="refreshStock()" class="mt-4 md:mt-0 bg-blue-50 hover:bg-blue-100 text-blue-600 px-4 py-2 rounded-md transition-colors">
+                <i class="fas fa-sync-alt mr-2"></i>Refresh Data
+            </button>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+            <!-- Summary Cards -->
+            <div class="bg-green-50 p-4 rounded-lg">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-sm text-gray-500">Total Medicines</p>
+                        <p class="text-2xl font-bold text-green-800">158</p>
+                    </div>
+                    <i class="fas fa-boxes text-green-400 text-2xl"></i>
+                </div>
+            </div>
+
+            <div class="bg-blue-50 p-4 rounded-lg">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-sm text-gray-500">In Stock</p>
+                        <p class="text-2xl font-bold text-blue-800">142</p>
+                    </div>
+                    <i class="fas fa-check-circle text-blue-400 text-2xl"></i>
+                </div>
+            </div>
+
+            <div class="bg-yellow-50 p-4 rounded-lg">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-sm text-gray-500">Low Stock</p>
+                        <p class="text-2xl font-bold text-yellow-800">12</p>
+                    </div>
+                    <i class="fas fa-exclamation-triangle text-yellow-400 text-2xl"></i>
+                </div>
+            </div>
+
+            <div class="bg-red-50 p-4 rounded-lg">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-sm text-gray-500">Out of Stock</p>
+                        <p class="text-2xl font-bold text-red-800">4</p>
+                    </div>
+                    <i class="fas fa-times-circle text-red-400 text-2xl"></i>
+                </div>
+            </div>
+        </div>
+
+        <div class="overflow-x-auto rounded-lg shadow-sm">
+            <table class="min-w-full divide-y divide-gray-200">
+                <thead class="bg-blue-50">
+                    <tr>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-blue-700 uppercase tracking-wider">
+                            Medicine Name
+                        </th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-blue-700 uppercase tracking-wider">
+                            Generic Name
+                        </th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-blue-700 uppercase tracking-wider">
+                            Manufacturer
+                        </th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-blue-700 uppercase tracking-wider">
+                            Batch No.
+                        </th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-blue-700 uppercase tracking-wider">
+                            Expiry Date
+                        </th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-blue-700 uppercase tracking-wider">
+                            Quantity
+                        </th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-blue-700 uppercase tracking-wider">
+                            Status
+                        </th>
+                    </tr>
+                </thead>
+                <tbody class="bg-white divide-y divide-gray-200">
+                    <!-- Sample Row 1 -->
+                    <tr class="hover:bg-gray-50 transition-colors">
+                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                            Paracetamol 500mg
+                            <span class="block text-xs text-gray-500">Tablet</span>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                            Acetaminophen
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                            PharmaCorp
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                            PC2023A1
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                            2025-06-30
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                            120 <span class="text-xs text-gray-400">units</span>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <span class="px-3 py-1 text-sm font-semibold rounded-full bg-green-100 text-green-800">
+                                <i class="fas fa-check-circle mr-1"></i> In Stock
+                            </span>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                            <button class="text-blue-600 hover:text-blue-900" onclick="manageStock('paracetamol')">
+                                
+                            </button>
+                        </td>
+                    </tr>
+
+                    <!-- Sample Row 2 -->
+                    <tr class="hover:bg-gray-50 transition-colors">
+                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                            Amoxicillin 250mg
+                            <span class="block text-xs text-gray-500">Capsule</span>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                            Amoxicillin Trihydrate
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                            MedLife Ltd.
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                            AMX2023B2
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                            2024-11-15
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                            35 <span class="text-xs text-gray-400">units</span>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <span class="px-3 py-1 text-sm font-semibold rounded-full bg-yellow-100 text-yellow-800">
+                                <i class="fas fa-exclamation-triangle mr-1"></i> Low Stock
+                            </span>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                            <button class="text-blue-600 hover:text-blue-900" onclick="manageStock('amoxicillin')">
+                               
+                            </button>
+                        </td>
+                    </tr>
+
+                    <!-- Sample Row 3 -->
+                    <tr class="hover:bg-gray-50 transition-colors">
+                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                            Insulin Glargine
+                            <span class="block text-xs text-gray-500">Injection</span>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                            Insulin Glargine
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                            BioPharma Inc.
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                            INS2023C3
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                            2025-03-31
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                            0 <span class="text-xs text-gray-400">units</span>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <span class="px-3 py-1 text-sm font-semibold rounded-full bg-red-100 text-red-800">
+                                <i class="fas fa-times-circle mr-1"></i> Out of Stock
+                            </span>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                            <button class="text-blue-600 hover:text-blue-900" onclick="manageStock('insulin')">
+                               
+                            </button>
+                        </td>
+                    </tr>
+                    
+                    
+    <tr class="hover:bg-gray-50 transition-colors">
+        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+            Metformin 500mg
+            <span class="block text-xs text-gray-500">Tablet</span>
+        </td>
+        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+            Metformin Hydrochloride
+        </td>
+        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+            HealthGen Pharma
+        </td>
+        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+            MET2024D4
+        </td>
+        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+            2026-01-20
+        </td>
+        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+            80 <span class="text-xs text-gray-400">units</span>
+        </td>
+        <td class="px-6 py-4 whitespace-nowrap">
+            <span class="px-3 py-1 text-sm font-semibold rounded-full bg-green-100 text-green-800">
+                <i class="fas fa-check-circle mr-1"></i> In Stock
+            </span>
+        </td>
+        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+            <button class="text-blue-600 hover:text-blue-900" onclick="manageStock('metformin')">
+               
+            </button>
+        </td>
+    </tr>
+
+    <!-- Sample Row 5 -->
+    <tr class="hover:bg-gray-50 transition-colors">
+        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+            Azithromycin 250mg
+            <span class="block text-xs text-gray-500">Tablet</span>
+        </td>
+        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+            Azithromycin
+        </td>
+        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+            Zydus Healthcare
+        </td>
+        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+            AZI2024E5
+        </td>
+        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+            2025-10-10
+        </td>
+        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+            15 <span class="text-xs text-gray-400">units</span>
+        </td>
+        <td class="px-6 py-4 whitespace-nowrap">
+            <span class="px-3 py-1 text-sm font-semibold rounded-full bg-yellow-100 text-yellow-800">
+                <i class="fas fa-exclamation-triangle mr-1"></i> Low Stock
+            </span>
+        </td>
+        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+            <button class="text-blue-600 hover:text-blue-900" onclick="manageStock('azithromycin')">
+           
+            </button>
+        </td>
+    </tr>
+
+    <!-- Sample Row 6 -->
+    <tr class="hover:bg-gray-50 transition-colors">
+        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+            Atorvastatin 10mg
+            <span class="block text-xs text-gray-500">Tablet</span>
+        </td>
+        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+            Atorvastatin Calcium
+        </td>
+        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+            Sun Pharma
+        </td>
+        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+            ATOR2024F6
+        </td>
+        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+            2026-09-12
+        </td>
+        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+            200 <span class="text-xs text-gray-400">units</span>
+        </td>
+        <td class="px-6 py-4 whitespace-nowrap">
+            <span class="px-3 py-1 text-sm font-semibold rounded-full bg-green-100 text-green-800">
+                <i class="fas fa-check-circle mr-1"></i> In Stock
+            </span>
+        </td>
+        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+            <button class="text-blue-600 hover:text-blue-900" onclick="manageStock('atorvastatin')">
+                
+            </button>
+        </td>
+    </tr>
+
+    <!-- Sample Row 7 -->
+    <tr class="hover:bg-gray-50 transition-colors">
+        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+            Rabeprazole 20mg
+            <span class="block text-xs text-gray-500">Tablet</span>
+        </td>
+        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+            Rabeprazole Sodium
+        </td>
+        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+            Torrent Pharma
+        </td>
+        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+            RAB2024G7
+        </td>
+        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+            2025-08-05
+        </td>
+        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+            0 <span class="text-xs text-gray-400">units</span>
+        </td>
+        <td class="px-6 py-4 whitespace-nowrap">
+            <span class="px-3 py-1 text-sm font-semibold rounded-full bg-red-100 text-red-800">
+                <i class="fas fa-times-circle mr-1"></i> Out of Stock
+            </span>
+        </td>
+        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+            <button class="text-blue-600 hover:text-blue-900" onclick="manageStock('rabeprazole')">
+              
+            </button>
+        </td>
+    </tr>
+
+    <!-- Sample Row 8 -->
+    <tr class="hover:bg-gray-50 transition-colors">
+        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+            Cefixime 200mg
+            <span class="block text-xs text-gray-500">Tablet</span>
+        </td>
+        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+            Cefixime Trihydrate
+        </td>
+        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+            Cipla
+        </td>
+        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+            CEF2024H8
+        </td>
+        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+            2025-12-22
+        </td>
+        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+            50 <span class="text-xs text-gray-400">units</span>
+        </td>
+        <td class="px-6 py-4 whitespace-nowrap">
+            <span class="px-3 py-1 text-sm font-semibold rounded-full bg-yellow-100 text-yellow-800">
+                <i class="fas fa-exclamation-triangle mr-1"></i> Low Stock
+            </span>
+        </td>
+        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+            <button class="text-blue-600 hover:text-blue-900" onclick="manageStock('cefixime')">
+        
+            </button>
+        </td>
+    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div class="section" style="text-align: center; margin-top: 20px;">
+      <a href="manage.htm" class="link-button">
+        <i class="fas fa-file-export" style="margin-right: 8px;"></i> Manage
+      </a>
+    </div>
+    </section>
+
+        `;
+
+      // Initial medicine stock data
+      const initialMedicineStock = [
+        {
+          name: 'Paracetamol 500mg',
+          type: 'Tablet',
+          generic: 'Acetaminophen',
+          manufacturer: 'PharmaCorp',
+          batchNo: 'PC2023A1',
+          expiry: '2025-06-30',
+          quantity: 120,
+          status: 'In Stock',
+        },
+        {
+          name: 'Amoxicillin 250mg',
+          type: 'Capsule',
+          generic: 'Amoxicillin Trihydrate',
+          manufacturer: 'MedLife Ltd.',
+          batchNo: 'AMX2023B2',
+          expiry: '2024-11-15',
+          quantity: 35,
+          status: 'Low Stock',
+        },
+        {
+          name: 'Insulin Glargine',
+          type: 'Injection',
+          generic: 'Insulin Glargine',
+          manufacturer: 'BioPharma Inc.',
+          batchNo: 'INS2023C3',
+          expiry: '2025-03-31',
+          quantity: 0,
+          status: 'Out of Stock',
+        },
+        {
+          name: 'Metformin 500mg',
+          type: 'Tablet',
+          generic: 'Metformin Hydrochloride',
+          manufacturer: 'HealthGen Pharma',
+          batchNo: 'MET2024D4',
+          expiry: '2026-01-20',
+          quantity: 80,
+          status: 'In Stock',
+        },
+        {
+          name: 'Azithromycin 250mg',
+          type: 'Tablet',
+          generic: 'Azithromycin',
+          manufacturer: 'Zydus Healthcare',
+          batchNo: 'AZI2024E5',
+          expiry: '2025-10-10',
+          quantity: 15,
+          status: 'Low Stock',
+        },
+        {
+          name: 'Atorvastatin 10mg',
+          type: 'Tablet',
+          generic: 'Atorvastatin Calcium',
+          manufacturer: 'Sun Pharma',
+          batchNo: 'ATOR2024F6',
+          expiry: '2026-09-12',
+          quantity: 200,
+          status: 'In Stock',
+        },
+        {
+          name: 'Rabeprazole 20mg',
+          type: 'Tablet',
+          generic: 'Rabeprazole Sodium',
+          manufacturer: 'Torrent Pharma',
+          batchNo: 'RAB2024G7',
+          expiry: '2025-08-05',
+          quantity: 0,
+          status: 'Out of Stock',
+        },
+        {
+          name: 'Cefixime 200mg',
+          type: 'Tablet',
+          generic: 'Cefixime Trihydrate',
+          manufacturer: 'Cipla',
+          batchNo: 'CEF2024H8',
+          expiry: '2025-12-22',
+          quantity: 50,
+          status: 'Low Stock',
+        },
+        {
+          name: 'Omeprazole 20mg',
+          type: 'Capsule',
+          generic: 'Omeprazole',
+          manufacturer: 'AstraZeneca',
+          batchNo: 'OMP2024I9',
+          expiry: '2025-09-15',
+          quantity: 75,
+          status: 'In Stock',
+        },
+        {
+          name: 'Lisinopril 10mg',
+          type: 'Tablet',
+          generic: 'Lisinopril',
+          manufacturer: 'Merck',
+          batchNo: 'LIS2024J10',
+          expiry: '2026-02-28',
+          quantity: 18,
+          status: 'Low Stock',
+        },
+        {
+          name: 'Sertraline 50mg',
+          type: 'Tablet',
+          generic: 'Sertraline Hydrochloride',
+          manufacturer: 'Pfizer',
+          batchNo: 'SER2024K11',
+          expiry: '2026-04-30',
+          quantity: 90,
+          status: 'In Stock',
+        },
+        {
+          name: 'Cetirizine 10mg',
+          type: 'Tablet',
+          generic: 'Cetirizine Hydrochloride',
+          manufacturer: 'GSK',
+          batchNo: 'CET2024L12',
+          expiry: '2025-11-30',
+          quantity: 45,
+          status: 'In Stock',
+        },
+        {
+          name: 'Fluconazole 150mg',
+          type: 'Capsule',
+          generic: 'Fluconazole',
+          manufacturer: 'Ranbaxy',
+          batchNo: 'FLU2024M13',
+          expiry: '2025-12-15',
+          quantity: 0,
+          status: 'Out of Stock',
+        },
+        {
+          name: 'Escitalopram 10mg',
+          type: 'Tablet',
+          generic: 'Escitalopram Oxalate',
+          manufacturer: 'Lupin',
+          batchNo: 'ESC2024N14',
+          expiry: '2026-03-31',
+          quantity: 12,
+          status: 'Low Stock',
+        },
+        {
+          name: 'Pantoprazole 40mg',
+          type: 'Tablet',
+          generic: 'Pantoprazole Sodium',
+          manufacturer: "Dr. Reddy's",
+          batchNo: 'PAN2024O15',
+          expiry: '2026-01-31',
+          quantity: 60,
+          status: 'In Stock',
+        },
+        {
+          name: 'Ondansetron 4mg',
+          type: 'Tablet',
+          generic: 'Ondansetron Hydrochloride',
+          manufacturer: 'Novartis',
+          batchNo: 'OND2024P16',
+          expiry: '2025-10-31',
+          quantity: 25,
+          status: 'Low Stock',
+        },
+      ];
+
+      // Function to initialize medicine stock in localStorage
+      function initializeMedicineStock() {
+        if (!localStorage.getItem('medicineStock')) {
+          localStorage.setItem(
+            'medicineStock',
+            JSON.stringify(initialMedicineStock)
+          );
+        }
+      }
+
+      // Function to get current medicine stock
+      function getMedicineStock() {
+        return JSON.parse(localStorage.getItem('medicineStock')) || [];
+      }
+
+      // Function to update medicine stock
+      function updateMedicineStock(updatedStock) {
+        localStorage.setItem('medicineStock', JSON.stringify(updatedStock));
+        localStorage.setItem('lastUpdated', new Date().toISOString());
+      }
+
+      // Function to refresh stock display
+      function refreshStock() {
+        const stock = getMedicineStock();
+        const lastUpdated = localStorage.getItem('lastUpdated');
+        document.getElementById('last-updated').textContent = lastUpdated
+          ? new Date(lastUpdated).toLocaleString()
+          : 'Never';
+
+        // Update summary cards
+        const totalMedicines = stock.length;
+        const inStock = stock.filter((med) => med.status === 'In Stock').length;
+        const lowStock = stock.filter(
+          (med) => med.status === 'Low Stock'
+        ).length;
+        const outOfStock = stock.filter(
+          (med) => med.status === 'Out of Stock'
+        ).length;
+
+        // Update the medicine table
+        const tbody = document.querySelector('table tbody');
+        if (!tbody) return;
+
+        tbody.innerHTML = stock
+          .map(
+            (med) => `
+          <tr class="hover:bg-gray-50 transition-colors">
+            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+              ${med.name}
+              <span class="block text-xs text-gray-500">${med.type}</span>
+            </td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+              ${med.generic}
+            </td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+              ${med.manufacturer}
+            </td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+              ${med.batchNo}
+            </td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+              ${med.expiry}
+            </td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+              ${med.quantity} <span class="text-xs text-gray-400">units</span>
+            </td>
+            <td class="px-6 py-4 whitespace-nowrap">
+              <span class="px-3 py-1 text-sm font-semibold rounded-full ${
+                med.status === 'In Stock'
+                  ? 'bg-green-100 text-green-800'
+                  : med.status === 'Low Stock'
+                  ? 'bg-yellow-100 text-yellow-800'
+                  : 'bg-red-100 text-red-800'
+              }">
+                <i class="fas ${
+                  med.status === 'In Stock'
+                    ? 'fa-check-circle'
+                    : med.status === 'Low Stock'
+                    ? 'fa-exclamation-triangle'
+                    : 'fa-times-circle'
+                } mr-1"></i> ${med.status}
+              </span>
+            </td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+              <button class="text-blue-600 hover:text-blue-900 flex items-center" 
+                      onclick="manageStock('${med.name}')">
+                <i class="fas fa-edit mr-1"></i> Edit
+              </button>
+            </td>
+          </tr>
+        `
+          )
+          .join('');
+
+        // Update summary numbers
+        document.querySelector('.bg-green-50 .text-2xl').textContent =
+          totalMedicines;
+        document.querySelector('.bg-blue-50 .text-2xl').textContent = inStock;
+        document.querySelector('.bg-yellow-50 .text-2xl').textContent =
+          lowStock;
+        document.querySelector('.bg-red-50 .text-2xl').textContent = outOfStock;
+      }
+
+      // Function to manage stock of a specific medicine
+      function manageStock(medicineName) {
+        const stock = getMedicineStock();
+        const medicine = stock.find((med) => med.name === medicineName);
+        if (!medicine) return;
+
+        // Store the selected medicine for the manage page
+        localStorage.setItem('selectedMedicine', JSON.stringify(medicine));
+        window.location.href = 'manage.htm';
+      }
+
+      // Initialize stock on page load
+      initializeMedicineStock();
+
+      function exportStock() {
+        // Add export logic here
+        console.log('Exporting stock data...');
+      }
+
+      // Page templates (medicine stock placeholder)
+      const pages = {
+        home: `
+                <section class="max-w-5xl mx-auto text-center">
+ <h1 class="text-4xl font-bold text-blue-700 mb-4" style="font-family: cursive;">Welcome to MLMS</h1>
+                    <p class="text-2xl text-gray-700 mb-10">
+                        Efficient and secure medical ledger management for modern healthcare professionals. MLMS streamlines your workflow, improves patient care, and ensures your medical practice runs at peak efficiency.
+                    </p>
+                    <img src="hexagon.jpg" alt="Medical Ledger" class="mx-auto rounded-lg shadow-md mb-12">
+
+                    <!-- Real-Time Inventory Section -->
+                    <section class="max-w-5xl mx-auto mt-12 flex flex-col md:flex-row items-center p-8 gap-8 no-box-shadow">
+                        <div class="w-100 h-72 flex justify-center items-center bg-blue-50 rounded-2xl shadow-xl overflow-hidden">
+    <img src="medicine.jpg"
+         alt="Real-time Medical Inventory"
+         class="w-full h-full object-cover border-4 border-blue-100 shadow-xl">
+</div>
+
+                        <div class="md:w-1/2 w-full text-left">
+                            <h2 class="text-3xl font-extrabold text-blue-800 mb-4 flex items-center" style="font-family: 'Poppins', sans-serif;">
+                                <i class="fas fa-bolt mr-2 text-yellow-400"></i>
+                                Real-Time Inventory & Instant Updates
+                            </h2>
+                            <p class="text-gray-700 text-lg mb-6">
+                                Access real-time data on medicine stocks and receive instant updates whenever inventory changes. Our system helps prevent shortages, reduces overstocking, and ensures timely patient care through automated notifications and transparent inventory tracking.
+                            </p>
+                        </div>
+                    </section>
+
+                    <!-- New: Medicines and Services Section -->
+                    <section class="max-w-5xl mx-auto mt-12 p-8 text-left no-box-shadow">
+                        <h2 class="text-3xl font-extrabold text-blue-800 mb-4 flex items-center" style="font-family: 'Poppins', sans-serif;">
+                            <i class="fas fa-capsules mr-2"></i>
+                            Comprehensive Medicine Management
+                        </h2>
+                        
+                        <ul class="list-disc pl-6 text-gray-700 text-lg mb-6">
+                            <li>Track medicine stock levels in real-time across multiple locations.</li>
+                            <li>Monitor expiration dates and receive alerts for soon-to-expire items.</li>
+                            <li>Barcode and RFID support for fast, error-free inventory updates.</li>
+                            <li>Integration with Electronic Health Records (EHR) to match prescriptions and inventory.</li>
+                            <li>Forecasting and demand planning to optimize purchasing and reduce waste.</li>
+                        </ul>
+                        
+                    </section>
+
+             <!-- Features Section -->
+<section class="max-w-7xl mx-auto mt-20 p-8">
+    <h2 class="text-3xl font-extrabold text-blue-800 mb-12 text-center">Core Features</h2>
+    
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+
+       <!-- Card 1: Basic Feature with Image -->
+<div class="group bg-white rounded-xl shadow-lg hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-2 hover:scale-105">
+    <!-- Image Section -->
+    <div class="relative h-48 overflow-hidden">
+        <img src="real_time_inventory.webp" 
+             alt="Real-Time Inventory"
+             class="w-full h-full object-cover transition-transform duration-300">
+    </div>
+    
+    <!-- Content Section -->
+    <div class="p-6">
+        <h3 class="text-xl font-bold mb-4 text-blue-800">Real-Time Inventory</h3>
+        <p class="text-gray-600 mb-4">Track medicine stocks across multiple locations with live updates and automated alerts.</p>
+    </div>
+</div>
+
+        <!-- Card 2: Icon Feature -->
+        <div class="group bg-white rounded-xl shadow-lg hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-2">
+           <!-- Image Section -->
+    <div class="relative h-48 overflow-hidden">
+        <img src="hipaa.png" 
+             alt="Real-Time Inventory"
+             class="w-full h-full object-cover transition-transform duration-300">
+    </div>
+            <div class="p-6 text-center">
+                <h3 class="text-xl font-bold mb-4 text-blue-800">HIPAA Compliance</h3>
+                <p class="text-gray-600 mb-4">Secure patient data with enterprise-grade encryption and access controls.</p>
+            </div>
+        </div>
+
+                
+
+       <!-- Card 5: Expiration Alert -->
+<div class="group bg-white rounded-xl shadow-lg hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-2 hover:scale-105">
+   <!-- Image Section -->
+    <div class="relative h-48 overflow-hidden">
+        <img src="exp.jfif" 
+             alt="Real-Time Inventory"
+             class="w-full h-full object-cover transition-transform duration-300">
+    </div>
+   
+    <div class="p-6">
+        <h3 class="text-xl font-bold mb-4 text-blue-800">Expiration Alerts</h3>
+        <p class="text-gray-600 mb-4">Automated alerts for soon-to-expire medications and supplies.</p>
+    </div>
+</div>
+
+
+        
+</section>
+
+
+                    <!-- New: Benefits Section -->
+                    <section class="max-w-5xl mx-auto mt-12 p-8 text-left no-box-shadow">
+                        <h2 class="text-3xl font-extrabold text-blue-800 mb-4 flex items-center" style="font-family: 'Poppins', sans-serif;">
+                            <i class="fas fa-heartbeat mr-2"></i>
+                            Why Choose MLMS?
+                        </h2>
+                        <ul class="list-disc pl-6 text-gray-700 text-lg mb-6">
+                            <li>Streamlined workflow and improved organization for your entire practice.</li>
+                            <li>More time for patient care by reducing administrative burdens.</li>
+                            <li>Faster, more accurate billing and claims management.</li>
+                            <li>Enhanced communication and collaboration among healthcare providers.</li>
+                            <li>Scalable and flexible platform to grow with your needs.</li>
+                        </ul>
+                    </section>
+
+                    <!-- Medicine Stock Section (shown after login) -->
+                    <!--MEDICINE_STOCK_SECTION-->
+                </section>
+
+                <div class="flex justify-center space-x-4 mt-8">
+                    <button onclick="navigate('register')"
+                        class="bg-blue-600 text-white px-6 py-3 rounded hover:bg-blue-700 transition text-lg">Get Started</button>
+                    <button onclick="navigate('subscription')"
+                        class="bg-gray-200 text-blue-700 px-6 py-3 rounded hover:bg-gray-300 transition text-lg">View Plans</button>
+                </div>
+            `,
+
+        login: `
+                <section class="max-w-md mx-auto bg-white p-8 rounded shadow">
+                    <h2 class="text-2xl font-bold text-blue-700 mb-6">Login to MLMS</h2>
+                    <form id="login-form" class="space-y-6">
+                        <div>
+                            <label class="block text-gray-700 mb-2" for="login-email">Email</label>
+                            <input id="login-email" type="email" class="w-full border rounded px-3 py-2"
+                                placeholder="you@example.com" required />
+                        </div>
+                        <div>
+                            <label class="block text-gray-700 mb-2" for="login-password">Password</label>
+                            <input id="login-password" type="password" class="w-full border rounded px-3 py-2"
+                                placeholder="********" required />
+                        </div>
+                        <button type="submit"
+                            class="w-full bg-blue-600 text-white py-2 rounded hover:bg-blue-700 transition">Login</button>
+                    </form>
+                </section>
+            `,
+
+        register: `
+                <section class="max-w-md mx-auto bg-white p-8 rounded shadow">
+                    <h2 class="text-2xl font-bold text-blue-700 mb-6">Create Your MLMS Account</h2>
+                    <form id="register-form" class="space-y-6">
+                        <div>
+                            <label class="block text-gray-700 mb-2" for="register-name">Full Name</label>
+                            <input id="register-name" type="text" class="w-full border rounded px-3 py-2"
+                                placeholder="Your Name" required />
+                        </div>
+                        <div>
+                            <label class="block text-gray-700 mb-2" for="register-email">Email</label>
+                            <input id="register-email" type="email" class="w-full border rounded px-3 py-2"
+                                placeholder="you@example.com" required />
+                        </div>
+                        <div>
+                            <label class="block text-gray-700 mb-2" for="register-password">Password</label>
+                            <input id="register-password" type="password" class="w-full border rounded px-3 py-2"
+                                placeholder="********" required />
+                        </div>
+                        <button type="submit"
+                            class="w-full bg-blue-600 text-white py-2 rounded hover:bg-blue-700 transition">Register</button>
+                    </form>
+                </section>
+            `,
+
+        subscription: `
+                <section class="max-w-4xl mx-auto py-12">
+    <h2 class="text-3xl font-bold text-blue-700 mb-8 text-center">Subscription Plans</h2>
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+
+        <!-- Basic Plan -->
+        <div class="rounded-3xl shadow-xl overflow-hidden">
+            <div class="bg-gradient-to-r from-red-200 via-orange-200 to-yellow-200 text-gray-800 py-4 text-center rounded-t-3xl relative">
+                <div class="absolute top-0 left-0 w-full h-full rounded-t-3xl opacity-20"></div>
+                <h3 class="text-xl font-semibold relative z-10">Basic</h3>
+                <p class="text-sm relative z-10">Essential features</p>
+                <div class="text-2xl font-bold mt-2 relative z-10">$9/mo</div>
+            </div>
+            <div class="p-6 bg-gray-50">
+                <ul class="space-y-2 text-gray-700">
+                    <li class="flex items-center">
+                        <i class="fas fa-check text-green-500 mr-2"></i>
+                        Essential features for individuals
+                    </li>
+                    <li class="flex items-center">
+                        <i class="fas fa-times text-red-500 mr-2"></i>
+                        Limited Support
+                    </li>
+                    <li class="flex items-center">
+                        <i class="fas fa-times text-red-500 mr-2"></i>
+                        No Customization
+                    </li>
+                </ul>
+                <div class="mt-4">
+                    <button
+                        class="block w-full bg-gradient-to-r from-red-400 via-orange-400 to-yellow-400 text-white py-3 rounded-md hover:brightness-110 transition-colors">Choose</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Professional Plan -->
+        <div class="rounded-3xl shadow-xl overflow-hidden">
+            <div class="bg-gradient-to-r from-green-200 via-blue-200 to-indigo-200 text-gray-800 py-4 text-center rounded-t-3xl relative">
+                <div class="absolute top-0 left-0 w-full h-full rounded-t-3xl opacity-20"></div>
+                <h3 class="text-xl font-semibold relative z-10">Professional</h3>
+                <p class="text-sm relative z-10">Advanced tools</p>
+                <div class="text-2xl font-bold mt-2 relative z-10">$29/mo</div>
+            </div>
+            <div class="p-6 bg-gray-50">
+                <ul class="space-y-2 text-gray-700">
+                    <li class="flex items-center">
+                        <i class="fas fa-check text-green-500 mr-2"></i>
+                        Advanced tools for clinics
+                    </li>
+                    <li class="flex items-center">
+                        <i class="fas fa-check text-green-500 mr-2"></i>
+                        Priority Support of Emergency
+                    </li>
+                    <li class="flex items-center">
+                        <i class="fas fa-times text-red-500 mr-2"></i>
+                        Basic Customization
+                    </li>
+                </ul>
+                <div class="mt-4">
+                    <button
+                        class="block w-full bg-gradient-to-r from-green-400 via-blue-400 to-indigo-400 text-white py-3 rounded-md hover:brightness-110 transition-colors">Choose</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Enterprise Plan -->
+        <div class="rounded-3xl shadow-xl overflow-hidden">
+            <div class="bg-gradient-to-r from-violet-200 via-purple-200 to-pink-200 text-gray-800 py-4 text-center rounded-t-3xl relative">
+                <div class="absolute top-0 left-0 w-full h-full rounded-t-3xl  opacity-20"></div>
+                <h3 class="text-xl font-semibold relative z-10">Enterprise</h3>
+                <p class="text-sm relative z-10">Complete solution</p>
+                <div class="text-2xl font-bold mt-2 relative z-10">$99/mo</div>
+            </div>
+            <div class="p-6 bg-gray-50">
+                <ul class="space-y-2 text-gray-700">
+                    <li class="flex items-center">
+                        <i class="fas fa-check text-green-500 mr-2"></i>
+                        Complete solution for hospitals
+                    </li>
+                    <li class="flex items-center">
+                        <i class="fas fa-check text-green-500 mr-2"></i>
+                        24/7 Support
+                    </li>
+                    <li class="flex items-center">
+                        <i class="fas fa-check text-green-500 mr-2"></i>
+                        Full Customization
+                    </li>
+                </ul>
+                <div class="mt-4">
+                    <button
+                        class="block w-full bg-gradient-to-r from-violet-400 via-purple-400 to-pink-400 text-white py-3 rounded-md hover:brightness-110 transition-colors">Choose</button>
+                </div>
+            </div>
+        </div>
+
+    </div>
+</section>
+
+            `,
+      };
+
+      // Navigation function (conditionally insert medicine stock)
+      function navigate(page) {
+        let contentHtml = pages[page] || pages.home;
+        if (page === 'home') {
+          const loggedInUser = JSON.parse(localStorage.getItem('loggedInUser'));
+          if (loggedInUser) {
+            contentHtml = contentHtml.replace(
+              '<!--MEDICINE_STOCK_SECTION-->',
+              medicineStockSection
+            );
+          } else {
+            contentHtml = contentHtml.replace(
+              '<!--MEDICINE_STOCK_SECTION-->',
+              ''
+            );
+          }
+        }
+        document.getElementById('content').innerHTML = contentHtml;
+
+        if (page === 'login') {
+          setupLoginForm();
+        } else if (page === 'register') {
+          setupRegisterForm();
+        }
+      }
+
+      // Setup registration form submission
+      function setupRegisterForm() {
+        const form = document.getElementById('register-form');
+        form.addEventListener('submit', function (e) {
+          e.preventDefault();
+
+          const name = document.getElementById('register-name').value.trim();
+          const email = document
+            .getElementById('register-email')
+            .value.trim()
+            .toLowerCase();
+          const password = document.getElementById('register-password').value;
+
+          if (!name || !email || !password) {
+            alert('Please fill in all fields.');
+            return;
+          }
+
+          let users = JSON.parse(localStorage.getItem('users')) || [];
+
+          if (users.some((u) => u.email === email)) {
+            alert('Email already registered!');
+            return;
+          }
+
+          users.push({
+            name,
+            email,
+            password,
+          });
+          localStorage.setItem('users', JSON.stringify(users));
+          alert('Registration successful! You can now login.');
+          navigate('login');
+        });
+      }
+
+      // Setup login form submission
+      function setupLoginForm() {
+        const form = document.getElementById('login-form');
+        form.addEventListener('submit', function (e) {
+          e.preventDefault();
+
+          const email = document
+            .getElementById('login-email')
+            .value.trim()
+            .toLowerCase();
+          const password = document.getElementById('login-password').value;
+
+          let users = JSON.parse(localStorage.getItem('users')) || [];
+          let user = users.find(
+            (u) => u.email === email && u.password === password
+          );
+
+          if (user) {
+            localStorage.setItem('loggedInUser', JSON.stringify(user));
+            alert(`Welcome back, ${user.name}!`);
+            updateSidebar();
+            navigate('home');
+          } else {
+            alert('Invalid email or password!');
+          }
+        });
+      }
+
+      // Logout function
+      function logoutUser() {
+        localStorage.removeItem('loggedInUser');
+        alert('You have been logged out.');
+        updateSidebar();
+        navigate('home');
+      }
+
+      // Function to change the background to a light yellow gradient
+      function changeBackground() {
+        document.body.classList.toggle('bg-yellow-50');
+        document.body.classList.toggle('bg-gradient-to-r');
+        document.body.classList.toggle('from-blue-100');
+        document.body.classList.toggle('to-blue-50');
+        if (document.body.classList.contains('bg-yellow-50')) {
+          document.body.style.backgroundImage =
+            'linear-gradient(to right, #fefce8, #fef9c3)';
+        } else {
+          document.body.style.backgroundImage = ''; // Reset to the default or initial style
+        }
+      }
+
+      // Update sidebar UI based on login status
+      function updateSidebar() {
+        const loggedInUser = JSON.parse(localStorage.getItem('loggedInUser'));
+        const userInfo = document.getElementById('user-info');
+        const loginBtn = document.getElementById('login-btn');
+        const registerBtn = document.getElementById('register-btn');
+        const logoutBtn = document.getElementById('logout-btn');
+
+        if (loggedInUser) {
+          userInfo.textContent = `Hello, ${loggedInUser.name}`;
+          loginBtn.style.display = 'none';
+          registerBtn.style.display = 'none';
+          logoutBtn.classList.remove('hidden');
+        } else {
+          userInfo.textContent = '';
+          loginBtn.style.display = 'flex';
+          registerBtn.style.display = 'flex';
+          logoutBtn.classList.add('hidden');
+        }
+      }
+
+      // Initial page load
+      updateSidebar();
+      navigate('home');
+    </script>
+  </body>
+</html>
